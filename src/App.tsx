@@ -7,34 +7,69 @@ type Element = { id: string; from: string; to: string };
 type Load = {
   id: string;
   nodeId: string;
-  direction: "x" | "y" | "z";
-  magnitude: number;
+  x: number;
+  y: number;
+  z: number;
+  theta_x: number;
+  theta_y: number;
+  theta_z: number;
 };
-type Reaction = { id: string; nodeId: string; x: 0 | 1; y: 0 | 1; z: 0 | 1 };
+
+type Reaction = {
+  nodeId: string;
+  x: 0 | 1;
+  y: 0 | 1;
+  z: 0 | 1;
+  theta_x: 0 | 1;
+  theta_y: 0 | 1;
+  theta_z: 0 | 1;
+};
 
 function App() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [elements, setElements] = useState<Element[]>([]);
   const [loads, setLoads] = useState<Load[]>([]);
-  const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [reactions, setReactions] = useState<Record<string, Reaction>>({});
 
   const [nodeForm, setNodeForm] = useState({ x: "", y: "", z: "" });
   const [elementForm, setElementForm] = useState({ from: "", to: "" });
   const [loadForm, setLoadForm] = useState({
     nodeId: "",
-    direction: "x" as "x" | "y" | "z",
-    magnitude: "",
-  });
-  const [reactionForm, setReactionForm] = useState({
-    nodeId: "",
-    x: false,
-    y: false,
-    z: false,
+    x: "",
+    y: "",
+    z: "",
+    theta_x: "",
+    theta_y: "",
+    theta_z: "",
   });
 
   const [tab, setTab] = useState<"node" | "element" | "load" | "reaction">(
     "node"
   );
+
+  const toggleRestraint = (
+    nodeId: string,
+    dof: keyof Omit<Reaction, "nodeId">
+  ) => {
+    setReactions((prev) => {
+      const prevReaction = prev[nodeId] || {
+        nodeId,
+        x: 0,
+        y: 0,
+        z: 0,
+        theta_x: 0,
+        theta_y: 0,
+        theta_z: 0,
+      };
+      return {
+        ...prev,
+        [nodeId]: {
+          ...prevReaction,
+          [dof]: prevReaction[dof] === 1 ? 0 : 1,
+        },
+      };
+    });
+  };
 
   const addNode = () => {
     const { x, y, z } = nodeForm;
@@ -58,30 +93,33 @@ function App() {
   };
 
   const addLoad = () => {
-    const { nodeId, direction, magnitude } = loadForm;
-    if (nodeId && magnitude && !isNaN(Number(magnitude))) {
+    const { nodeId, x, y, z, theta_x, theta_y, theta_z } = loadForm;
+    if (nodeId) {
       const newId = (loads.length + 1).toString();
       setLoads([
         ...loads,
-        { id: newId, nodeId, direction, magnitude: Number(magnitude) },
+        {
+          id: newId,
+          nodeId,
+          x: Number(x) || 0,
+          y: Number(y) || 0,
+          z: Number(z) || 0,
+          theta_x: Number(theta_x) || 0,
+          theta_y: Number(theta_y) || 0,
+          theta_z: Number(theta_z) || 0,
+        },
       ]);
-      setLoadForm({ nodeId: "", direction: "x", magnitude: "" });
+      setLoadForm({
+        nodeId: "",
+        x: "",
+        y: "",
+        z: "",
+        theta_x: "",
+        theta_y: "",
+        theta_z: "",
+      });
     }
   };
-
-  const addReaction = () => {
-    const { nodeId, x, y, z } = reactionForm;
-    if (nodeId && (x || y || z)) {
-      const newId = (reactions.length + 1).toString();
-      setReactions([
-        ...reactions,
-        { id: newId, nodeId, x: x ? 1 : 0, y: y ? 1 : 0, z: z ? 1 : 0 },
-      ]);
-      setReactionForm({ nodeId: "", x: false, y: false, z: false });
-    }
-  };
-
-  // Styling omitted for brevity - reuse your styles
 
   return (
     <div
@@ -89,7 +127,7 @@ function App() {
         display: "flex",
         height: "100vh",
         width: "100vw",
-        fontFamily: "Segoe UI, Tahoma, Geneva, Verdana, sans-serif",
+        fontFamily: "Segoe UI",
         backgroundColor: "#f0f2f5",
       }}
     >
@@ -113,171 +151,58 @@ function App() {
             overflowX: "auto",
           }}
         >
-          <button
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: tab === "node" ? "#0078d4" : "#e1e1e1",
-              color: tab === "node" ? "#fff" : "#333",
-              fontWeight: 600,
-              cursor: "pointer",
-              borderRadius: "4px 4px 0 0",
-              border: "none",
-            }}
-            onClick={() => setTab("node")}
-          >
-            Nodes
-          </button>
-          <button
-            style={{
-              padding: "0.5rem 1rem",
-              flex: 1,
-              width: "fit-content",
-              backgroundColor: tab === "element" ? "#0078d4" : "#e1e1e1",
-              color: tab === "element" ? "#fff" : "#333",
-              fontWeight: 600,
-              cursor: "pointer",
-              borderRadius: "4px 4px 0 0",
-              border: "none",
-            }}
-            onClick={() => setTab("element")}
-          >
-            Elements
-          </button>
-          <button
-            style={{
-              padding: "0.5rem 1rem",
-              flex: 1,
-              width: "fit-content",
-              backgroundColor: tab === "load" ? "#0078d4" : "#e1e1e1",
-              color: tab === "load" ? "#fff" : "#333",
-              fontWeight: 600,
-              cursor: "pointer",
-              borderRadius: "4px 4px 0 0",
-              border: "none",
-            }}
-            onClick={() => setTab("load")}
-          >
-            Loads
-          </button>
-          <button
-            style={{
-              padding: "0.5rem 1rem",
-              flex: 1,
-              width: "fit-content",
-              backgroundColor: tab === "reaction" ? "#0078d4" : "#e1e1e1",
-              color: tab === "reaction" ? "#fff" : "#333",
-              fontWeight: 600,
-              cursor: "pointer",
-              borderRadius: "4px 4px 0 0",
-              border: "none",
-            }}
-            onClick={() => setTab("reaction")}
-          >
-            Reactions
-          </button>
+          {["node", "element", "load", "reaction"].map((t) => (
+            <button
+              key={t}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: tab === t ? "#0078d4" : "#e1e1e1",
+                color: tab === t ? "#fff" : "#333",
+                fontWeight: 600,
+                cursor: "pointer",
+                borderRadius: "4px 4px 0 0",
+                border: "none",
+              }}
+              onClick={() => setTab(t as any)}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}s
+            </button>
+          ))}
         </div>
 
-        {/* Nodes */}
-        <div
-          style={{
-            padding: "0 24px 24px",
-            flex: 1,
-            overflowY: "auto",
-          }}
-        >
+        <div style={{ padding: "0 24px 24px", flex: 1, overflowY: "auto" }}>
+          {/* Node tab */}
           {tab === "node" && (
             <>
               <h3>Add Node</h3>
-              <input
-                type="number"
-                placeholder="X coordinate"
-                value={nodeForm.x}
-                onChange={(e) =>
-                  setNodeForm({ ...nodeForm, x: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  margin: "8px 0",
-                  padding: 8,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                }}
-              />
-              <input
-                type="number"
-                placeholder="Y coordinate"
-                value={nodeForm.y}
-                onChange={(e) =>
-                  setNodeForm({ ...nodeForm, y: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  margin: "8px 0",
-                  padding: 8,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                }}
-              />
-              <input
-                type="number"
-                placeholder="Z coordinate"
-                value={nodeForm.z}
-                onChange={(e) =>
-                  setNodeForm({ ...nodeForm, z: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  margin: "8px 0",
-                  padding: 8,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                }}
-              />
-              <button
-                onClick={addNode}
-                style={{
-                  width: "100%",
-                  padding: 10,
-                  marginTop: 8,
-                  backgroundColor: "#0078d4",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
+              {["x", "y", "z"].map((axis) => (
+                <input
+                  key={axis}
+                  type="number"
+                  placeholder={`${axis.toUpperCase()} coordinate`}
+                  value={nodeForm[axis as "x" | "y" | "z"]}
+                  onChange={(e) =>
+                    setNodeForm({ ...nodeForm, [axis]: e.target.value })
+                  }
+                  style={{
+                    width: "100%",
+                    margin: "8px 0",
+                    padding: 8,
+                    borderRadius: 4,
+                    border: "1px solid #ccc",
+                  }}
+                />
+              ))}
+              <button onClick={addNode} style={buttonStyle}>
                 Add Node
               </button>
-
-              <h4
-                style={{
-                  marginTop: 32,
-                  borderBottom: "1px solid #ddd",
-                  paddingBottom: 6,
-                }}
-              >
-                Existing Nodes
-              </h4>
-              <ul
-                style={{
-                  maxHeight: 180,
-                  overflowY: "auto",
-                  listStyle: "none",
-                  paddingLeft: 0,
-                }}
-              >
+              <h4 style={sectionHeading}>Existing Nodes</h4>
+              <ul style={listStyle}>
                 {nodes.length === 0 ? (
                   <li>No nodes added yet.</li>
                 ) : (
                   nodes.map((n) => (
-                    <li
-                      key={n.id}
-                      style={{
-                        padding: "6px 0",
-                        borderBottom: "1px solid #eee",
-                      }}
-                    >
+                    <li key={n.id} style={listItemStyle}>
                       Node {n.id}: ({n.position.join(", ")})
                     </li>
                   ))
@@ -286,95 +211,39 @@ function App() {
             </>
           )}
 
-          {/* Elements */}
+          {/* Element tab */}
           {tab === "element" && (
             <>
               <h3>Add Element</h3>
-              <select
-                value={elementForm.from}
-                onChange={(e) =>
-                  setElementForm({ ...elementForm, from: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  margin: "8px 0",
-                  padding: 8,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                }}
-              >
-                <option value="">From Node</option>
-                {nodes.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    Node {n.id}
+              {["from", "to"].map((key) => (
+                <select
+                  key={key}
+                  value={elementForm[key as "from" | "to"]}
+                  onChange={(e) =>
+                    setElementForm({ ...elementForm, [key]: e.target.value })
+                  }
+                  style={selectStyle}
+                >
+                  <option value="">
+                    {key === "from" ? "From Node" : "To Node"}
                   </option>
-                ))}
-              </select>
-              <select
-                value={elementForm.to}
-                onChange={(e) =>
-                  setElementForm({ ...elementForm, to: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  margin: "8px 0",
-                  padding: 8,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                }}
-              >
-                <option value="">To Node</option>
-                {nodes.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    Node {n.id}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={addElement}
-                style={{
-                  width: "100%",
-                  padding: 10,
-                  marginTop: 8,
-                  backgroundColor: "#0078d4",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
+                  {nodes.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      Node {n.id}
+                    </option>
+                  ))}
+                </select>
+              ))}
+              <button onClick={addElement} style={buttonStyle}>
                 Add Element
               </button>
-
-              <h4
-                style={{
-                  marginTop: 32,
-                  borderBottom: "1px solid #ddd",
-                  paddingBottom: 6,
-                }}
-              >
-                Existing Elements
-              </h4>
-              <ul
-                style={{
-                  maxHeight: 180,
-                  overflowY: "auto",
-                  listStyle: "none",
-                  paddingLeft: 0,
-                }}
-              >
+              <h4 style={sectionHeading}>Existing Elements</h4>
+              <ul style={listStyle}>
                 {elements.length === 0 ? (
                   <li>No elements added yet.</li>
                 ) : (
                   elements.map((e) => (
-                    <li
-                      key={e.id}
-                      style={{
-                        padding: "6px 0",
-                        borderBottom: "1px solid #eee",
-                      }}
-                    >
+                    <li key={e.id} style={listItemStyle}>
                       Element {e.id}: Node {e.from} → Node {e.to}
                     </li>
                   ))
@@ -383,7 +252,7 @@ function App() {
             </>
           )}
 
-          {/* Loads */}
+          {/* Load tab */}
           {tab === "load" && (
             <>
               <h3>Add Load</h3>
@@ -392,13 +261,7 @@ function App() {
                 onChange={(e) =>
                   setLoadForm({ ...loadForm, nodeId: e.target.value })
                 }
-                style={{
-                  width: "100%",
-                  margin: "8px 0",
-                  padding: 8,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                }}
+                style={selectStyle}
               >
                 <option value="">Select Node</option>
                 {nodes.map((n) => (
@@ -407,97 +270,44 @@ function App() {
                   </option>
                 ))}
               </select>
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  margin: "8px 0",
-                }}
-              >
-                {(["x", "y", "z"] as const).map((axis) => (
-                  <label
-                    key={axis}
-                    style={{ flex: 1, textAlign: "center", cursor: "pointer" }}
-                  >
-                    <input
-                      type="radio"
-                      name="loadDirection"
-                      value={axis}
-                      checked={loadForm.direction === axis}
-                      onChange={() =>
-                        setLoadForm({ ...loadForm, direction: axis })
-                      }
-                      style={{ marginRight: 6 }}
-                    />
-                    {axis.toUpperCase()}
-                  </label>
-                ))}
-              </div>
-
-              <input
-                type="number"
-                placeholder="Magnitude"
-                value={loadForm.magnitude}
-                onChange={(e) =>
-                  setLoadForm({ ...loadForm, magnitude: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  margin: "8px 0",
-                  padding: 8,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                }}
-                min="0"
-              />
-              <button
-                onClick={addLoad}
-                style={{
-                  width: "100%",
-                  padding: 10,
-                  marginTop: 8,
-                  backgroundColor: "#0078d4",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
+              {[
+                "Force in X (Fx)",
+                "Force in Y (Fy)",
+                "Force in Z (Fz)",
+                "Moment about X (Mx)",
+                "Moment about Y (My)",
+                "Moment about Z (Mz)",
+              ].map((dof) => (
+                <input
+                  key={dof}
+                  type="number"
+                  placeholder={`${dof}`}
+                  value={loadForm[dof as keyof typeof loadForm]}
+                  onChange={(e) =>
+                    setLoadForm({ ...loadForm, [dof]: e.target.value })
+                  }
+                  style={{
+                    width: "100%",
+                    margin: "4px 0",
+                    padding: 8,
+                    borderRadius: 4,
+                    border: "1px solid #ccc",
+                  }}
+                />
+              ))}
+              <button onClick={addLoad} style={buttonStyle}>
                 Add Load
               </button>
-
-              <h4
-                style={{
-                  marginTop: 32,
-                  borderBottom: "1px solid #ddd",
-                  paddingBottom: 6,
-                }}
-              >
-                Existing Loads
-              </h4>
-              <ul
-                style={{
-                  maxHeight: 180,
-                  overflowY: "auto",
-                  listStyle: "none",
-                  paddingLeft: 0,
-                }}
-              >
+              <h4 style={sectionHeading}>Existing Loads</h4>
+              <ul style={listStyle}>
                 {loads.length === 0 ? (
                   <li>No loads added yet.</li>
                 ) : (
                   loads.map((l) => (
-                    <li
-                      key={l.id}
-                      style={{
-                        padding: "6px 0",
-                        borderBottom: "1px solid #eee",
-                      }}
-                    >
-                      <strong>Load {l.id}</strong> @ Node {l.nodeId}: Direction{" "}
-                      {l.direction.toUpperCase()} × {l.magnitude}
+                    <li key={l.id} style={listItemStyle}>
+                      <strong>Load {l.id}</strong> @ Node {l.nodeId}: Fx={l.x},
+                      Fy={l.y}, Fz={l.z}, Mx={l.theta_x}, My={l.theta_y}, Mz=
+                      {l.theta_z}
                     </li>
                   ))
                 )}
@@ -505,129 +315,109 @@ function App() {
             </>
           )}
 
-          {/* Reactions */}
+          {/* Reaction tab */}
           {tab === "reaction" && (
             <>
-              <h3>Add Reaction</h3>
-              <select
-                value={reactionForm.nodeId}
-                onChange={(e) =>
-                  setReactionForm({ ...reactionForm, nodeId: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  margin: "8px 0",
-                  padding: 8,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                }}
-              >
-                <option value="">Select Node</option>
-                {nodes.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    Node {n.id}
-                  </option>
-                ))}
-              </select>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: 6,
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={reactionForm.x}
-                  onChange={(e) =>
-                    setReactionForm({ ...reactionForm, x: e.target.checked })
-                  }
-                />
-                <span style={{ marginLeft: 8 }}>X (0 or 1)</span>
-              </label>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: 6,
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={reactionForm.y}
-                  onChange={(e) =>
-                    setReactionForm({ ...reactionForm, y: e.target.checked })
-                  }
-                />
-                <span style={{ marginLeft: 8 }}>Y (0 or 1)</span>
-              </label>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: 6,
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={reactionForm.z}
-                  onChange={(e) =>
-                    setReactionForm({ ...reactionForm, z: e.target.checked })
-                  }
-                />
-                <span style={{ marginLeft: 8 }}>Z (0 or 1)</span>
-              </label>
-              <button
-                onClick={addReaction}
-                style={{
-                  width: "100%",
-                  padding: 10,
-                  marginTop: 8,
-                  backgroundColor: "#0078d4",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                Add Reaction
-              </button>
-
-              <h4
-                style={{
-                  marginTop: 32,
-                  borderBottom: "1px solid #ddd",
-                  paddingBottom: 6,
-                }}
-              >
-                Existing Reactions
-              </h4>
-              <ul
-                style={{
-                  maxHeight: 180,
-                  overflowY: "auto",
-                  listStyle: "none",
-                  paddingLeft: 0,
-                }}
-              >
-                {reactions.length === 0 ? (
-                  <li>No reactions added yet.</li>
-                ) : (
-                  reactions.map((r) => (
-                    <li
-                      key={r.id}
-                      style={{
-                        padding: "6px 0",
-                        borderBottom: "1px solid #eee",
-                      }}
-                    >
-                      <strong>Reaction {r.id}</strong> @ Node {r.nodeId}: X=
-                      {r.x}, Y={r.y}, Z={r.z}
-                    </li>
-                  ))
-                )}
-              </ul>
+              <h3>Set Reactions (Restraints) per Node</h3>
+              {nodes.length === 0 ? (
+                <p>No nodes available.</p>
+              ) : (
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    marginTop: 16,
+                  }}
+                >
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #ccc" }}>
+                      <th style={{ textAlign: "left", padding: 8 }}>Node</th>
+                      {["X", "Y", "Z", "Mx", "My", "Mz"].map((label) => (
+                        <th
+                          key={label}
+                          style={{ padding: 8, textAlign: "center", width: 40 }}
+                        >
+                          {label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nodes.map((node) => {
+                      const reaction = reactions[node.id] || {
+                        nodeId: node.id,
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                        theta_x: 0,
+                        theta_y: 0,
+                        theta_z: 0,
+                      };
+                      return (
+                        <tr
+                          key={node.id}
+                          style={{
+                            borderBottom: "1px solid #eee",
+                            userSelect: "none",
+                          }}
+                        >
+                          <td style={{ padding: 8 }}>
+                            {node.id} ({node.position.join(", ")})
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={reaction.x === 1}
+                              onChange={() => toggleRestraint(node.id, "x")}
+                            />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={reaction.y === 1}
+                              onChange={() => toggleRestraint(node.id, "y")}
+                            />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={reaction.z === 1}
+                              onChange={() => toggleRestraint(node.id, "z")}
+                            />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={reaction.theta_x === 1}
+                              onChange={() =>
+                                toggleRestraint(node.id, "theta_x")
+                              }
+                            />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={reaction.theta_y === 1}
+                              onChange={() =>
+                                toggleRestraint(node.id, "theta_y")
+                              }
+                            />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={reaction.theta_z === 1}
+                              onChange={() =>
+                                toggleRestraint(node.id, "theta_z")
+                              }
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </>
           )}
         </div>
@@ -639,5 +429,43 @@ function App() {
     </div>
   );
 }
+
+const buttonStyle = {
+  width: "100%",
+  padding: 10,
+  marginTop: 8,
+  backgroundColor: "#0078d4",
+  color: "#fff",
+  border: "none",
+  borderRadius: 4,
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const sectionHeading = {
+  marginTop: 32,
+  borderBottom: "1px solid #ddd",
+  paddingBottom: 6,
+};
+
+const listStyle = {
+  maxHeight: 180,
+  overflowY: "auto" as const,
+  listStyleType: "none" as const,
+  paddingLeft: 0,
+};
+
+const listItemStyle = {
+  padding: "6px 0",
+  borderBottom: "1px solid #eee",
+};
+
+const selectStyle = {
+  width: "100%",
+  margin: "8px 0",
+  padding: 8,
+  borderRadius: 4,
+  border: "1px solid #ccc",
+};
 
 export default App;
