@@ -4,6 +4,7 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { Line } from "@react-three/drei";
 import { Text } from "@react-three/drei";
+import { Billboard } from "@react-three/drei";
 
 const Grid = () => {
   const size = 100;
@@ -46,15 +47,14 @@ const CustomAxes = () => {
         color="red"
         lineWidth={2}
       />
-      <Text
-        position={[axisLength + 0.1, 0, 0]}
-        fontSize={fontSize}
-        color="red"
-        anchorX="left"
-        anchorY="middle"
-      >
-        X
-      </Text>
+
+      <group position={[axisLength + 0.1, 0, 0]}>
+        <Billboard>
+          <Text fontSize={fontSize} color="red" anchorX="left" anchorY="middle">
+            X
+          </Text>
+        </Billboard>
+      </group>
 
       {/* Y Axis - Green */}
       <Line
@@ -65,15 +65,18 @@ const CustomAxes = () => {
         color="green"
         lineWidth={2}
       />
-      <Text
-        position={[0, axisLength + 0.1, 0]}
-        fontSize={fontSize}
-        color="green"
-        anchorX="left"
-        anchorY="middle"
-      >
-        Y
-      </Text>
+      <group position={[0, axisLength + 0.1, 0]}>
+        <Billboard>
+          <Text
+            fontSize={fontSize}
+            color="green"
+            anchorX="left"
+            anchorY="middle"
+          >
+            Y
+          </Text>
+        </Billboard>
+      </group>
 
       {/* Z Axis - Blue */}
       <Line
@@ -84,15 +87,18 @@ const CustomAxes = () => {
         color="blue"
         lineWidth={2}
       />
-      <Text
-        position={[0, 0, axisLength + 0.1]}
-        fontSize={fontSize}
-        color="blue"
-        anchorX="left"
-        anchorY="middle"
-      >
-        Z
-      </Text>
+      <group position={[0, 0, axisLength + 0.1]}>
+        <Billboard>
+          <Text
+            fontSize={fontSize}
+            color="blue"
+            anchorX="left"
+            anchorY="middle"
+          >
+            Z
+          </Text>
+        </Billboard>
+      </group>
     </>
   );
 };
@@ -150,20 +156,25 @@ export default function Viewer({
       {nodes.map((node) => (
         <React.Fragment key={node.id}>
           <NodeSphere position={node.position} />
-          <Text
+          <group
             position={[
               node.position[0] + 0.1,
               node.position[1] + 0.1,
               node.position[2],
             ]}
-            fontSize={0.1}
-            color="black"
-            anchorX="center"
-            anchorY="bottom"
-            outlineWidth={0.005}
           >
-            {node.id}
-          </Text>
+            <Billboard>
+              <Text
+                fontSize={0.1}
+                color="black"
+                anchorX="center"
+                anchorY="bottom"
+                outlineWidth={0.005}
+              >
+                {node.id}
+              </Text>
+            </Billboard>
+          </group>
         </React.Fragment>
       ))}
 
@@ -182,15 +193,19 @@ export default function Viewer({
         return (
           <React.Fragment key={el.id}>
             <ElementLine start={start} end={end} />
-            <Text
-              position={[midpoint[0] + 0.1, midpoint[1], midpoint[2]]}
-              fontSize={0.09}
-              color="blue"
-              anchorX="left"
-              anchorY="middle"
-            >
-              {el.id}
-            </Text>
+
+            <group position={[midpoint[0] + 0.1, midpoint[1], midpoint[2]]}>
+              <Billboard>
+                <Text
+                  fontSize={0.09}
+                  color="blue"
+                  anchorX="left"
+                  anchorY="middle"
+                >
+                  {el.id}
+                </Text>
+              </Billboard>
+            </group>
           </React.Fragment>
         );
       })}
