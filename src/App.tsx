@@ -7,9 +7,6 @@ import {
   elementsAtom,
   loadsAtom,
   reactionsAtom,
-  type Node,
-  type Element,
-  type Load,
   type Reaction,
 } from "./atoms";
 
@@ -331,11 +328,11 @@ function App() {
                 >
                   <thead>
                     <tr style={{ borderBottom: "1px solid #ccc" }}>
-                      <th style={{ textAlign: "left", padding: 8 }}>Node</th>
+                      <th style={{ textAlign: "left", padding: 2 }}>Node</th>
                       {["X", "Y", "Z", "Mx", "My", "Mz"].map((label) => (
                         <th
                           key={label}
-                          style={{ padding: 8, textAlign: "center", width: 40 }}
+                          style={{ padding: 2, textAlign: "center", width: 40 }}
                         >
                           {label}
                         </th>
@@ -362,7 +359,10 @@ function App() {
                           }}
                         >
                           <td style={{ padding: 8 }}>
-                            {node.id} ({node.position.join(", ")})
+                            <div>{node.id}</div>
+                            <div style={{ fontSize: "0.85em", color: "#666" }}>
+                              ({node.position.join(", ")})
+                            </div>
                           </td>
                           <td style={{ textAlign: "center" }}>
                             <input
