@@ -1,29 +1,17 @@
 import React, { useState } from "react";
 import "./App.css";
 import Viewer from "./components/Viewer";
-
-type Node = { id: string; position: [number, number, number] };
-type Element = { id: string; from: string; to: string };
-type Load = {
-  id: string;
-  nodeId: string;
-  x: number;
-  y: number;
-  z: number;
-  theta_x: number;
-  theta_y: number;
-  theta_z: number;
-};
-
-type Reaction = {
-  nodeId: string;
-  x: 0 | 1;
-  y: 0 | 1;
-  z: 0 | 1;
-  theta_x: 0 | 1;
-  theta_y: 0 | 1;
-  theta_z: 0 | 1;
-};
+import { useAtom } from "jotai";
+import {
+  nodesAtom,
+  elementsAtom,
+  loadsAtom,
+  reactionsAtom,
+  type Node,
+  type Element,
+  type Load,
+  type Reaction,
+} from "./atoms";
 
 const loadPlaceholder = {
   x: "Force in X (Fx)",
@@ -35,10 +23,10 @@ const loadPlaceholder = {
 };
 
 function App() {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [elements, setElements] = useState<Element[]>([]);
-  const [loads, setLoads] = useState<Load[]>([]);
-  const [reactions, setReactions] = useState<Record<string, Reaction>>({});
+  const [nodes, setNodes] = useAtom(nodesAtom);
+  const [elements, setElements] = useAtom(elementsAtom);
+  const [loads, setLoads] = useAtom(loadsAtom);
+  const [reactions, setReactions] = useAtom(reactionsAtom);
 
   const [nodeForm, setNodeForm] = useState({ x: "", y: "", z: "" });
   const [elementForm, setElementForm] = useState({ from: "", to: "" });
@@ -153,7 +141,12 @@ function App() {
           flexDirection: "column",
         }}
       >
-        <h2 style={{ marginBottom: 24, color: "#0078d4" }}>Frame Builder</h2>
+        <h2 style={{ color: "#0078d4", marginBottom: 2 }}>
+          3D Frame Analysis – Stiffness Matrix Method
+        </h2>
+        <span style={{ marginBottom: 24, marginTop: 2 }}>
+          Developed by Deepesh Chhetri
+        </span>
 
         <div
           style={{
@@ -167,7 +160,7 @@ function App() {
             <button
               key={t}
               style={{
-                padding: "0.5rem 1rem",
+                padding: "0.5rem",
                 backgroundColor: tab === t ? "#0078d4" : "#e1e1e1",
                 color: tab === t ? "#fff" : "#333",
                 fontWeight: 600,
@@ -182,7 +175,7 @@ function App() {
           ))}
         </div>
 
-        <div style={{ padding: "0 24px 24px", flex: 1, overflowY: "auto" }}>
+        <div style={{ padding: "0", flex: 1, overflowY: "auto" }}>
           {/* Node tab */}
           {tab === "node" && (
             <>
