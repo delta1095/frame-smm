@@ -25,6 +25,15 @@ type Reaction = {
   theta_z: 0 | 1;
 };
 
+const loadPlaceholder = {
+  x: "Force in X (Fx)",
+  y: "Force in Y (Fy)",
+  z: "Force in Z (Fz)",
+  theta_x: "Moment in X (Mx)",
+  theta_y: "Moment in Y (My)",
+  theta_z: "Moment in Z (Mz)",
+};
+
 function App() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [elements, setElements] = useState<Element[]>([]);
@@ -94,6 +103,9 @@ function App() {
 
   const addLoad = () => {
     const { nodeId, x, y, z, theta_x, theta_y, theta_z } = loadForm;
+
+    console.log(loadForm);
+
     if (nodeId) {
       const newId = (loads.length + 1).toString();
       setLoads([
@@ -160,7 +172,7 @@ function App() {
                 color: tab === t ? "#fff" : "#333",
                 fontWeight: 600,
                 cursor: "pointer",
-                borderRadius: "4px 4px 0 0",
+                borderRadius: "4px",
                 border: "none",
               }}
               onClick={() => setTab(t as any)}
@@ -270,18 +282,13 @@ function App() {
                   </option>
                 ))}
               </select>
-              {[
-                "Force in X (Fx)",
-                "Force in Y (Fy)",
-                "Force in Z (Fz)",
-                "Moment about X (Mx)",
-                "Moment about Y (My)",
-                "Moment about Z (Mz)",
-              ].map((dof) => (
+              {["x", "y", "z", "theta_x", "theta_y", "theta_z"].map((dof) => (
                 <input
                   key={dof}
                   type="number"
-                  placeholder={`${dof}`}
+                  placeholder={
+                    loadPlaceholder[dof as keyof typeof loadPlaceholder]
+                  }
                   value={loadForm[dof as keyof typeof loadForm]}
                   onChange={(e) =>
                     setLoadForm({ ...loadForm, [dof]: e.target.value })
@@ -432,14 +439,17 @@ function App() {
 
 const buttonStyle = {
   width: "100%",
-  padding: 10,
-  marginTop: 8,
+  padding: "10px",
+  marginTop: 12,
   backgroundColor: "#0078d4",
   color: "#fff",
   border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
+  borderRadius: 6,
+  fontSize: "15px",
   fontWeight: 600,
+  cursor: "pointer",
+  transition: "background-color 0.2s",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
 };
 
 const sectionHeading = {
