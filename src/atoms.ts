@@ -1,7 +1,19 @@
 import { atom } from "jotai";
 
 export type Node = { id: string; position: [number, number, number] };
-export type Element = { id: string; from: string; to: string };
+
+export type Element = {
+  id: string;
+  from: string;
+  to: string;
+  E: number;
+  G: number;
+  A: number;
+  Iy: number;
+  Iz: number;
+  J: number;
+};
+
 export type Load = {
   id: string;
   nodeId: string;
@@ -12,6 +24,8 @@ export type Load = {
   theta_y: number;
   theta_z: number;
 };
+
+// Represents reactions at nodes (0: free, 1: fixed))
 export type Reaction = {
   nodeId: string;
   x: 0 | 1;

@@ -9,6 +9,7 @@ import {
   reactionsAtom,
   type Reaction,
 } from "./atoms";
+import { Analysis } from "./components/Analysis";
 
 const loadPlaceholder = {
   x: "Force in X (Fx)",
@@ -26,7 +27,16 @@ function App() {
   const [reactions, setReactions] = useAtom(reactionsAtom);
 
   const [nodeForm, setNodeForm] = useState({ x: "", y: "", z: "" });
-  const [elementForm, setElementForm] = useState({ from: "", to: "" });
+  const [elementForm, setElementForm] = useState({
+    from: "",
+    to: "",
+    E: "",
+    G: "",
+    A: "",
+    Iy: "",
+    Iz: "",
+    J: "",
+  });
   const [loadForm, setLoadForm] = useState({
     nodeId: "",
     x: "",
@@ -40,6 +50,8 @@ function App() {
   const [tab, setTab] = useState<"node" | "element" | "load" | "reaction">(
     "node"
   );
+
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   const toggleRestraint = (
     nodeId: string,
@@ -78,18 +90,38 @@ function App() {
   };
 
   const addElement = () => {
-    const { from, to } = elementForm;
-    if (from && to && from !== to) {
+    const { from, to, E, G, A, Iy, Iz, J } = elementForm;
+    if (from && to && from !== to && E && G && A && Iy && Iz && J) {
       const newId = (elements.length + 1).toString();
-      setElements([...elements, { id: newId, from, to }]);
-      setElementForm({ from: "", to: "" });
+      setElements([
+        ...elements,
+        {
+          id: newId,
+          from,
+          to,
+          E: Number(E),
+          G: Number(G),
+          A: Number(A),
+          Iy: Number(Iy),
+          Iz: Number(Iz),
+          J: Number(J),
+        },
+      ]);
+      setElementForm({
+        from: "",
+        to: "",
+        E: "",
+        G: "",
+        A: "",
+        Iy: "",
+        Iz: "",
+        J: "",
+      });
     }
   };
 
   const addLoad = () => {
     const { nodeId, x, y, z, theta_x, theta_y, theta_z } = loadForm;
-
-    console.log(loadForm);
 
     if (nodeId) {
       const newId = (loads.length + 1).toString();
@@ -217,6 +249,8 @@ function App() {
           {tab === "element" && (
             <>
               <h3>Add Element</h3>
+
+              {/* Node Selection */}
               {["from", "to"].map((key) => (
                 <select
                   key={key}
@@ -236,9 +270,38 @@ function App() {
                   ))}
                 </select>
               ))}
+
+              {/* Section and Material Properties */}
+              {[
+                ["E", "Young’s Modulus (E)"],
+                ["G", "Shear Modulus (G)"],
+                ["A", "Area (A)"],
+                ["Iy", "Moment of Inertia Iy"],
+                ["Iz", "Moment of Inertia Iz"],
+                ["J", "Torsional Constant (J)"],
+              ].map(([key, label]) => (
+                <input
+                  key={key}
+                  type="number"
+                  placeholder={label}
+                  value={elementForm[key as keyof typeof elementForm]}
+                  onChange={(e) =>
+                    setElementForm({ ...elementForm, [key]: e.target.value })
+                  }
+                  style={{
+                    width: "100%",
+                    margin: "6px 0",
+                    padding: 8,
+                    borderRadius: 4,
+                    border: "1px solid #ccc",
+                  }}
+                />
+              ))}
+
               <button onClick={addElement} style={buttonStyle}>
                 Add Element
               </button>
+
               <h4 style={sectionHeading}>Existing Elements</h4>
               <ul style={listStyle}>
                 {elements.length === 0 ? (
@@ -246,7 +309,10 @@ function App() {
                 ) : (
                   elements.map((e) => (
                     <li key={e.id} style={listItemStyle}>
-                      Element {e.id}: Node {e.from} → Node {e.to}
+                      <strong>Element {e.id}</strong>: Node {e.from} → Node{" "}
+                      {e.to}
+                      <br />
+                      E={e.E}, G={e.G}, A={e.A}, Iy={e.Iy}, Iz={e.Iz}, J={e.J}
                     </li>
                   ))
                 )}
@@ -426,6 +492,72 @@ function App() {
       <main style={{ flex: 1 }}>
         <Viewer nodes={nodes} elements={elements} />
       </main>
+
+      <button
+        onClick={() => setShowAnalysis(true)}
+        style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          padding: "12px 20px",
+          backgroundColor: "#0078d4",
+          color: "#fff",
+          border: "none",
+          borderRadius: "999px",
+          fontSize: 16,
+          fontWeight: "bold",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          cursor: "pointer",
+          zIndex: 1000,
+        }}
+      >
+        Show Analysis
+      </button>
+
+      {showAnalysis && (
+        <div
+          style={{
+            position: "fixed",
+            top: 60,
+            right: 40,
+            width: "calc(100vw - 120px)",
+            height: "calc(100vh - 120px)",
+            backgroundColor: "#fff",
+            borderRadius: 12,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+            padding: 20,
+            overflowY: "auto",
+            zIndex: 1001,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <h3 style={{ margin: 0, color: "#0078d4" }}>Analysis Results</h3>
+            <button
+              onClick={() => setShowAnalysis(false)}
+              style={{
+                background: "transparent",
+                border: "none",
+                fontSize: 24,
+                cursor: "pointer",
+                lineHeight: 1,
+                color: "#999",
+              }}
+              aria-label="Close Analysis"
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <Analysis />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

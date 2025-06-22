@@ -14,6 +14,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "jotai": "^2.12.5",
+    "mathjs": "^14.5.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-scripts": "5.0.1",
@@ -44,5 +45,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/mathjs": "^9.4.2"
   }
 }
