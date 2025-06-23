@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@fontsource/inter": "^5.2.6",
     "@react-three/drei": "^10.3.0",
     "@react-three/fiber": "^9.1.2",
     "@testing-library/dom": "^10.4.0",
