@@ -10,7 +10,7 @@ import {
   type Reaction,
 } from "./atoms";
 import { Analysis } from "./components/Analysis";
-import "@fontsource/inter/variable.css"; // For variable font (recommended)
+import "@fontsource/inter";
 
 const loadPlaceholder = {
   x: "Force in X (Fx)",
